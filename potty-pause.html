@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width,
+                 initial-scale=1.0,
+                 viewport-fit=cover">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent">
+
+  <meta name="theme-color" content="#22c55e">
+
+  <title>Pause & Go</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+    }
+
+    body {
+      background: #22c55e;
+      transition: background-color 0.35s ease;
+    }
+
+
+    /* =========================
+       MAIN SCREEN
+       ========================= */
+
+    #app {
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+
+      text-align: center;
+
+      color: white;
+
+      padding:
+        max(25px, env(safe-area-inset-top))
+        max(25px, env(safe-area-inset-right))
+        max(25px, env(safe-area-inset-bottom))
+        max(25px, env(safe-area-inset-left));
+    }
+
+
+    /* =========================
+       BIG GO / PAUSE TEXT
+       ========================= */
+
+    .main-text {
+
+      font-size: clamp(75px, 21vw, 170px);
+
+      font-weight: 900;
+
+      line-height: 0.9;
+
+      letter-spacing: -5px;
+
+      text-shadow:
+        0 5px 15px rgba(0,0,0,0.15);
+
+      margin-bottom: 45px;
+    }
+
+
+    /* =========================
+       MAIN BUTTON
+       ========================= */
+
+    #controlButton {
+
+      width: min(85vw, 500px);
+
+      min-height: 180px;
+
+      border: none;
+
+      border-radius: 40px;
+
+      background: white;
+
+      color: #15803d;
+
+      box-shadow:
+        0 12px 0 rgba(0,0,0,0.18),
+        0 18px 35px rgba(0,0,0,0.18);
+
+      display: flex;
+
+      flex-direction: column;
+
+      justify-content: center;
+
+      align-items: center;
+
+      gap: 12px;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease;
+    }
+
+
+    #controlButton:active {
+
+      transform: translateY(8px);
+
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.18),
+        0 8px 18px rgba(0,0,0,0.15);
+    }
+
+
+    /* Icon */
+
+    .button-icon {
+
+      font-size: clamp(55px, 14vw, 90px);
+
+      font-weight: 900;
+
+      line-height: 1;
+    }
+
+
+    /* Button wording */
+
+    .button-text {
+
+      font-size: clamp(25px, 7vw, 42px);
+
+      font-weight: 900;
+
+      line-height: 1;
+
+      letter-spacing: 1px;
+    }
+
+
+    /* =========================
+       SMALL MESSAGE
+       ========================= */
+
+    .message {
+
+      margin-top: 45px;
+
+      font-size: clamp(20px, 5vw, 30px);
+
+      font-weight: 600;
+
+      opacity: 0.9;
+
+      max-width: 600px;
+    }
+
+
+    /* =========================
+       PAUSED STATE
+       ========================= */
+
+    body.paused {
+
+      background: #ef4444;
+    }
+
+
+    body.paused #controlButton {
+
+      color: #dc2626;
+    }
+
+
+    /* =========================
+       SMALL SCREENS
+       ========================= */
+
+    @media (max-height: 650px) {
+
+      .main-text {
+
+        font-size: 70px;
+
+        margin-bottom: 25px;
+      }
+
+      #controlButton {
+
+        min-height: 140px;
+      }
+
+      .button-icon {
+
+        font-size: 55px;
+      }
+
+      .message {
+
+        margin-top: 25px;
+      }
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <main id="app">
+
+
+    <!-- MAIN STATUS -->
+
+    <div
+      class="main-text"
+      id="mainText">
+
+      GO!
+
+    </div>
+
+
+    <!-- BIG BUTTON -->
+
+    <button
+      id="controlButton"
+      aria-label="Pause">
+
+      <div
+        class="button-icon"
+        id="buttonIcon">
+
+        ❚❚
+
+      </div>
+
+      <div
+        class="button-text"
+        id="buttonText">
+
+        TAP TO PAUSE
+
+      </div>
+
+    </button>
+
+
+    <!-- SMALL MESSAGE -->
+
+    <div
+      class="message"
+      id="message">
+
+      Need the potty? Press pause!
+
+    </div>
+
+
+  </main>
+
+
+  <script>
+
+    // =========================
+    // STATE
+    // =========================
+
+    let paused = false;
+
+
+    // =========================
+    // ELEMENTS
+    // =========================
+
+    const button =
+      document.getElementById("controlButton");
+
+    const buttonIcon =
+      document.getElementById("buttonIcon");
+
+    const buttonText =
+      document.getElementById("buttonText");
+
+    const mainText =
+      document.getElementById("mainText");
+
+    const message =
+      document.getElementById("message");
+
+    const themeColour =
+      document.querySelector(
+        'meta[name="theme-color"]'
+      );
+
+
+    // =========================
+    // BUTTON PRESS
+    // =========================
+
+    button.addEventListener(
+      "click",
+      toggleState
+    );
+
+
+    function toggleState() {
+
+      paused = !paused;
+
+
+      // -------------------------
+      // PAUSED
+      // -------------------------
+
+      if (paused) {
+
+        document.body
+          .classList
+          .add("paused");
+
+
+        mainText.textContent =
+          "PAUSED";
+
+
+        buttonIcon.textContent =
+          "▶";
+
+
+        buttonText.textContent =
+          "PLAY";
+
+
+        message.textContent =
+          "Potty time! 🚽";
+
+
+        button.setAttribute(
+          "aria-label",
+          "Play"
+        );
+
+
+        themeColour.setAttribute(
+          "content",
+          "#ef4444"
+        );
+
+      }
+
+
+      // -------------------------
+      // GO
+      // -------------------------
+
+      else {
+
+        document.body
+          .classList
+          .remove("paused");
+
+
+        mainText.textContent =
+          "GO!";
+
+
+        buttonIcon.textContent =
+          "❚❚";
+
+
+        buttonText.textContent =
+          "TAP TO PAUSE";
+
+
+        message.textContent =
+          "Need the potty? Press pause!";
+
+
+        button.setAttribute(
+          "aria-label",
+          "Pause"
+        );
+
+
+        themeColour.setAttribute(
+          "content",
+          "#22c55e"
+        );
+
+      }
+
+    }
+
+
+    // =========================
+    // STOP DOUBLE-TAP ZOOM
+    // =========================
+
+    let lastTouchEnd = 0;
+
+
+    document.addEventListener(
+      "touchend",
+
+      function(event) {
+
+        const now = Date.now();
+
+        if (
+          now - lastTouchEnd <= 300
+        ) {
+
+          event.preventDefault();
+
+        }
+
+        lastTouchEnd = now;
+
+      },
+
+      false
+    );
+
+  </script>
+
+</body>
+</html>
